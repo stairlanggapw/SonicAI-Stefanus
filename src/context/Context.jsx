@@ -4,6 +4,7 @@ import { translations } from '../components/Translation'
 export const Context = createContext()
 
 const ContextProvider = ({ children }) => {
+    const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
     const [input, setInput] = useState("")
     const [loading, setLoading] = useState(false)
     const [messages, setMessages] = useState([])
@@ -52,37 +53,6 @@ const ContextProvider = ({ children }) => {
         const text = userInput || input
         if (!text.trim() && uploadedFiles.length === 0) return
 
-        const userContent = []
-
-        uploadedFiles.forEach(f => {
-            if (f.type.startsWith('image/')) {
-                userContent.push({
-                    type: 'image',
-                    source: {
-                        type: 'base64',
-                        media_type: f.type,
-                        data: f.base64
-                    }
-                })
-            } else {
-                try {
-                    userContent.push({
-                        type: 'text',
-                        text: `[File: ${f.name}]\n${atob(f.base64)}`
-                    })
-                } catch {
-                    userContent.push({
-                        type: 'text',
-                        text: `[File: ${f.name}] (binary file, cannot display)`
-                    })
-                }
-            }
-        })
-
-        if (text.trim()) {
-            userContent.push({ type: 'text', text })
-        }
-
         const userMessage = { role: 'user', text }
         setMessages(prev => [...prev, userMessage])
         setUploadedFiles([])
@@ -91,26 +61,27 @@ const ContextProvider = ({ children }) => {
 
         conversationHistory.current.push({
             role: 'user',
-            content: userContent
+            parts: [{ text }]
         })
 
         try {
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'claude-sonnet-4-20250514',
-                    max_tokens: 1000,
-                    messages: conversationHistory.current
-                })
-            })
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: conversationHistory.current
+                    })
+                }
+            )
 
             const data = await response.json()
-            const aiText = data.content?.[0]?.text || 'No response'
+            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response'
 
             conversationHistory.current.push({
-                role: 'assistant',
-                content: aiText
+                role: 'model',
+                parts: [{ text: aiText }]
             })
 
             setMessages(prev => [...prev, { role: 'ai', text: '' }])
@@ -125,18 +96,11 @@ const ContextProvider = ({ children }) => {
             })
 
             const currentId = activeChatIdRef.current
-            const allMessages = [
-                ...messages,
-                userMessage,
-                { role: 'ai', text: aiText }
-            ]
+            const allMessages = [...messages, userMessage, { role: 'ai', text: aiText }]
 
             if (currentId) {
                 setChatHistory(prev =>
-                    prev.map(c => c.id === currentId
-                        ? { ...c, messages: allMessages }
-                        : c
-                    )
+                    prev.map(c => c.id === currentId ? { ...c, messages: allMessages } : c)
                 )
             } else {
                 const newId = Date.now()
@@ -170,10 +134,9 @@ const ContextProvider = ({ children }) => {
         setMessages(chat.messages)
         setActiveChatId(chat.id)
         activeChatIdRef.current = chat.id
-        // Rebuild conversation history dari chat
         conversationHistory.current = chat.messages.map(m => ({
-            role: m.role === 'ai' ? 'assistant' : 'user',
-            content: m.text
+            role: m.role === 'ai' ? 'model' : 'user',
+            parts: [{ text: m.text }]
         }))
     }
 
