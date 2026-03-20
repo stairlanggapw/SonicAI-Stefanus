@@ -6,7 +6,7 @@ import ReactMarkdown from 'react-markdown'
 import { useNavigate } from 'react-router-dom'
 
 const Main = () => {
-    const { input, setInput, loading, messages, sendMessage, t, language, setLanguage, theme, setTheme, chatTitle, setChatTitle, startNewChat, loadChat, chatHistory, activeChatId } = useContext(Context)
+    const { input, setInput, loading, messages, sendMessage, t, language, setLanguage, theme, setTheme, chatTitle, setChatTitle, startNewChat, loadChat, chatHistory, activeChatId, uploadedFiles, setUploadedFiles } = useContext(Context)
     const navigate = useNavigate()
     const [likedMessages, setLikedMessages] = useState({})
     const [copiedMessages, setCopiedMessages] = useState({})
@@ -18,20 +18,16 @@ const Main = () => {
     const settingsRef = useRef(null)
     const [showPlusMenu, setShowPlusMenu] = useState(false)
     const plusMenuRef = useRef(null)
-    const isUserScrolling = useRef(false)
     const textareaRef = useRef(null)
     const wrapperRef = useRef(null)
-    const folderInputRef = useRef(null)
     const fileInputRef = useRef(null)
-    const [uploadedFiles, setUploadedFiles] = useState([])
-    const [generatedImage, setGeneratedImage] = useState(null)
-    const HF_KEY = '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'  
+    const titleGeneratedRef = useRef(false)
+    const HF_KEY = import.meta.env.VITE_HF_KEY
+    const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
 
     const handleCreateImage = async () => {
         if (!input.trim()) return
         setShowPlusMenu(false)
-        setLoading(true)
-        
         try {
             const response = await fetch(
                 'https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell',
@@ -44,10 +40,8 @@ const Main = () => {
                     body: JSON.stringify({ inputs: input })
                 }
             )
-            
             const blob = await response.blob()
             const imageUrl = URL.createObjectURL(blob)
-
             setMessages(prev => [...prev, 
                 { role: 'user', text: `Generate image: ${input}` },
                 { role: 'ai', text: `![generated](${imageUrl})` }
@@ -55,15 +49,12 @@ const Main = () => {
             setInput('')
         } catch (err) {
             console.error(err)
-        } finally {
-            setLoading(false)
         }
     }
 
     const handleFileUpload = (e) => {
         const files = Array.from(e.target.files)
         if (files.length === 0) return
-
         files.forEach(file => {
             const reader = new FileReader()
             reader.onload = (ev) => {
@@ -80,45 +71,10 @@ const Main = () => {
         setShowPlusMenu(false)
     }
 
-    const handleFolderUpload = async (e) => {
-        const files = Array.from(e.target.files)
-        if (files.length === 0) return
-        
-        const folderName = files[0].webkitRelativePath.split('/')[0]
-        
-        const fileContents = await Promise.all(
-            files.map(file => new Promise((resolve) => {
-                const reader = new FileReader()
-                
-                if (file.type.startsWith('image/')) {
-                    resolve({ name: file.webkitRelativePath, content: '[Image file]', type: 'image' })
-                    return
-                }
-                
-                reader.onload = (e) => resolve({ 
-                    name: file.webkitRelativePath, 
-                    content: e.target.result,
-                    type: 'text'
-                })
-                reader.onerror = () => resolve({ 
-                    name: file.webkitRelativePath, 
-                    content: '[Cannot read file]',
-                    type: 'error'
-                })
-                reader.readAsText(file)
-            }))
-        )
-        
-        const summary = `[Folder: ${folderName}]\n` + 
-            fileContents.map(f => `📄 ${f.name}:\n${f.content}`).join('\n\n---\n\n')
-        
-        setInput(prev => prev + summary)
-    }
-
     useEffect(() => {
-    if (wrapperRef.current) {
-        wrapperRef.current.scrollTop = wrapperRef.current.scrollHeight
-    }
+        if (wrapperRef.current) {
+            wrapperRef.current.scrollTop = wrapperRef.current.scrollHeight
+        }
     }, [input])
 
     const handleVoice = () => {
@@ -152,17 +108,18 @@ const Main = () => {
 
     const generateTitle = async (userMessage) => {
         try {
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    model: "claude-sonnet-4-20250514",
-                    max_tokens: 20,
-                    messages: [{ role: "user", content: `Create a short title max 5 words for this conversation: "${userMessage}". Only write the title, no quotes.` }]
-                })
-            })
+            const res = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ role: 'user', parts: [{ text: `Create a short title max 5 words for this conversation: "${userMessage}". Only write the title, no quotes.` }] }]
+                    })
+                }
+            )
             const data = await res.json()
-            const title = data.content?.[0]?.text || userMessage.slice(0, 30)
+            const title = data.candidates?.[0]?.content?.parts?.[0]?.text || userMessage.slice(0, 30)
             setChatTitle(title)
         } catch {
             setChatTitle(userMessage.slice(0, 30))
@@ -181,14 +138,24 @@ const Main = () => {
 
     useEffect(() => {
         const lastMsg = messages[messages.length - 1]
-        if (lastMsg?.role === 'ai' && lastMsg?.text && messages.length >= 2 && !chatTitle) {
+        if (
+            lastMsg?.role === 'ai' && 
+            lastMsg?.text && 
+            messages.length >= 2 && 
+            !chatTitle &&
+            !titleGeneratedRef.current
+        ) {
+            titleGeneratedRef.current = true
             const userMsg = messages[messages.length - 2]?.text || ''
             generateTitle(userMsg)
         }
     }, [messages])
 
     useEffect(() => {
-        if (messages.length === 0) setChatTitle('')
+        if (messages.length === 0) {
+            setChatTitle('')
+            titleGeneratedRef.current = false
+        }
     }, [messages])
 
     const handleLike = (index) => {
@@ -209,13 +176,8 @@ const Main = () => {
         <div className='main'>
             <div className='nav flex items-center justify-between px-4 py-2 relative'>
                 <div className="flex items-center gap-3">
-
                     <button className="md:hidden" onClick={() => setShowMobileSidebar(true)}>
-                        <img  
-                            src={assets.sidebar_icon}
-                            alt=''
-                            className={` ${theme === 'dark' ? 'invert' : ''}`}>
-                        </img>
+                        <img src={assets.sidebar_icon} alt='' className={` ${theme === 'dark' ? 'invert' : ''}`}></img>
                     </button>
                     <p>Sonic</p>
                 </div>
@@ -413,7 +375,7 @@ const Main = () => {
                             <button 
                                 className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition ${theme === 'dark' ? 'hover:bg-[#3a3a3a] text-gray-200' : 'hover:bg-gray-50 text-gray-700'}`}
                                 onClick={() => fileInputRef.current.click()}
-                                >
+                            >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                                 </svg>
@@ -477,25 +439,25 @@ const Main = () => {
                                 </div>
                             )}
                         </div>
-                        <div className={`textarea-wrapper ${theme === 'dark' ? 'invert' : ''}`} ref={wrapperRef}>
+                        <div className="textarea-wrapper" ref={wrapperRef}>
                             <textarea
                                 ref={textareaRef}
                                 rows={1}
                                 placeholder={t.placeholder}
                                 value={input}
                                 onChange={(e) => {
-                                setInput(e.target.value)
-                                e.target.style.height = 'auto'
-                                e.target.style.height = e.target.scrollHeight + 'px'
+                                    setInput(e.target.value)
+                                    e.target.style.height = 'auto'
+                                    e.target.style.height = e.target.scrollHeight + 'px'
                                 }}
                                 onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault()
-                                    sendMessage()
-                                    if (textareaRef.current) {
-                                    textareaRef.current.style.height = 'auto'
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                        e.preventDefault()
+                                        sendMessage()
+                                        if (textareaRef.current) {
+                                            textareaRef.current.style.height = 'auto'
+                                        }
                                     }
-                                }
                                 }}
                                 style={{ resize: 'none', overflow: 'hidden' }}
                             />
@@ -509,7 +471,6 @@ const Main = () => {
                 </div>
             </div>
 
-            {/* Mobile Sidebar Overlay */}
             {showMobileSidebar && (
                 <div className="fixed inset-0 z-50 md:hidden">
                     <div className="absolute inset-0 bg-black/40" onClick={() => setShowMobileSidebar(false)} />
@@ -535,7 +496,6 @@ const Main = () => {
                                                 : theme === 'dark' ? 'hover:bg-[#2f2f2f] text-gray-300' : 'hover:bg-gray-200 text-gray-700'
                                         }`}
                                     >
-                                        
                                         <span className="truncate">{chat.title}...</span>
                                     </div>
                                 ))}
