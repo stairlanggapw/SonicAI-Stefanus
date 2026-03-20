@@ -1,0 +1,239 @@
+.sidebar {
+    width: 70px;
+    min-height: 100vh;
+    background-color: var(--sidebar-bg);
+    padding: 20px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    transition: width 0.4s ease, padding 0.4s ease;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.sidebar.extended {
+    width: 260px;
+    padding: 20px;
+    align-items: flex-start;
+}
+
+.top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    padding-left: 8px;
+}
+
+.top-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    flex-direction: row; 
+}
+
+.menu {
+    width: 25px;
+    cursor: pointer;
+    display: block;
+}
+
+.sidebar.extended .menu {
+    padding-left: 0px;
+}
+
+.new-chat {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background-color: var(--bg-card-hover);
+    border-radius: 50px;
+    cursor: pointer;
+    width: 40px;
+    overflow: hidden;
+    transition: width 0.4s ease;
+    margin-left: -10px;
+}
+
+.new-chat img {
+    width: 18px;
+    flex-shrink: 0;
+}
+
+.new-chat p {
+    font-size: 14px;
+    color: var(--sidebar-text);
+}
+
+.sidebar.extended .new-chat {
+    width: 160px;
+}
+
+.recent {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-left: 0px;
+    margin-left: -5px;
+}
+
+.recent-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.recent-entry {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 2px 8px;
+    margin-left: -3px;
+}
+
+.recent-entry:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.recent-entry img {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.recent-entry p {
+    font-size: 14px;
+    color: var(--sidebar-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 170px;    
+}
+
+.bottom {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+    width: 100%;
+    padding: 0 8px;
+}
+
+.bottom-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    max-width: 200px; 
+    box-sizing: border-box;
+    color: var(--sidebar-text);
+}
+
+.bottom-item p {
+    color: var(--sidebar-text);
+}
+
+.bottom-item img {
+    width: 20px !important;
+    height: 20px !important;
+    display: block !important;
+    flex-shrink: 0;
+}
+
+.bottom-item:hover {
+    background-color: var(--bg-card-hover);
+}
+
+.sidebar.extended .top,
+.sidebar.extended .bottom {
+    align-items: flex-start;
+}
+
+.sidebar:not(.extended) .bottom-item {
+    max-width: 50px;
+    width: 35px;
+    height: 35px; 
+    padding: 8px;
+    justify-content: center;
+}
+
+.sidebar.extended .bottom-item {
+    max-width: 220px; 
+}
+
+.active-chat {
+    background-color: var(--bg-card);
+    border-radius: 8px;
+    margin: 2px 8px;
+    margin-left: -3px;
+}
+
+.no-history {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 8px 10px;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        width: 60px;
+        padding: 15px 10px;
+    }
+
+    .sidebar.extended {
+        width: 220px;
+        padding: 15px;
+    }
+
+    .sidebar.extended .new-chat {
+        width: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        position: fixed; 
+        top: 0;
+        left: 0;
+        z-index: 100;
+        width: 0px;      
+        padding: 0;
+        min-height: 100vh;
+    }
+
+    .sidebar.extended {
+        width: 240px;
+        padding: 20px;
+    }
+
+    .sidebar.extended::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 240px;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.3);
+        z-index: -1;
+    }
+
+    .menu {
+        width: 22px;
+    }
+
+    .new-chat p,
+    .recent-entry p,
+    .recent-title {
+        font-size: 13px;
+    }
+}
