@@ -439,7 +439,7 @@ const Main = () => {
                                 </div>
                             )}
                         </div>
-                        <div className="textarea-wrapper" ref={wrapperRef}>
+                        <div className={`textarea-wrapper ${theme === 'dark' ? 'invert' : ''}`} ref={wrapperRef}>
                             <textarea
                                 ref={textareaRef}
                                 rows={1}

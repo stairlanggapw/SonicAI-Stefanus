@@ -1,5 +1,13 @@
 {
-  "appId": "com.sonic.ai",
-  "appName": "ai-clone",
-  "webDir": "dist"
+  "appId": "com.stefynetics.sonic",
+  "appName": "Sonic AI",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
 }
