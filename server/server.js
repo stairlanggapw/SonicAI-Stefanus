@@ -7,7 +7,7 @@ dotenv.config()
 
 const app = express()
 app.use(express.json())
-app.use(cors())
+app.use(cors({ origin: '*' }))
 
 const client = new Groq({
     apiKey: process.env.GROQ_API_KEY
