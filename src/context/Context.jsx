@@ -68,7 +68,7 @@ const ContextProvider = ({ children }) => {
             const response = await fetch("https://sonicai-stefanus-production.up.railway.app/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: text })
+                body: JSON.stringify({ message: text, language: language })
             })
 
             console.log("Status:", response.status)

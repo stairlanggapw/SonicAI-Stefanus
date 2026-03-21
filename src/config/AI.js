@@ -10,11 +10,11 @@ app.use(express.json())
 app.use(cors())
 
 const client = new Groq({
-    apiKey: process.env.VITE_GROQ_KEY
+    apiKey: process.env.GROQ_API_KEY
 })
 
-const GOOGLE_API_KEY = process.env.VITE_GOOGLE_API_KEY
-const GOOGLE_CX = process.env.VITE_GOOGLE_CX
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+const GOOGLE_CX = process.env.GOOGLE_CX
 
 const searchGoogle = async (query) => {
     const res = await axios.get("https://www.googleapis.com/customsearch/v1", {
@@ -47,7 +47,7 @@ app.post("/chat", async (req, res) => {
     Jika ditanya siapa pembuatmu, jawab StefyNetics.
     Jangan pernah menyebut bahwa kamu adalah Groq atau LLaMA.
     Dan jika ada yang menanyakan siapa itu stefanus airlangga putra widyantoro, jawab dia adalah seorang pelajar di SMKN 3 Kendal dan pembuat StefyNetics.
-    Please respond in the same language as the user's message.`
+    Please respond in the same language as the user's message. If the user writes in Indonesian, reply in Indonesian. If in English, reply in English. Always match the user's language automatically.`
 
     if (needsSearch) {
         const results = await searchGoogle(userMessage)
@@ -72,6 +72,7 @@ app.post("/chat", async (req, res) => {
     })
 })
 
-app.listen(3000, () => {
-    console.log("AI Server running on port 3000")
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => {
+    console.log(`AI Server running on port ${PORT}`)
 })
