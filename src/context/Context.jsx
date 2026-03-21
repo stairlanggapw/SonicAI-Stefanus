@@ -71,7 +71,9 @@ const ContextProvider = ({ children }) => {
                 body: JSON.stringify({ message: text })
             })
 
+            console.log("Status:", response.status)
             const data = await response.json()
+            console.log("Data:", data)  
             const aiText = data.reply || 'No response'
 
             setMessages(prev => [...prev, { role: 'ai', text: '' }])
