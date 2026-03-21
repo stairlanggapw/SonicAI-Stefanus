@@ -65,24 +65,14 @@ const ContextProvider = ({ children }) => {
         })
 
         try {
-            const response = await fetch(
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-                {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: conversationHistory.current
-                    })
-                }
-            )
+            const response = await fetch("https://sonicai-stefanus-production.up.railway.app/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: text })
+            })
 
             const data = await response.json()
-            const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response'
-
-            conversationHistory.current.push({
-                role: 'model',
-                parts: [{ text: aiText }]
-            })
+            const aiText = data.reply || 'No response'
 
             setMessages(prev => [...prev, { role: 'ai', text: '' }])
             setLoading(false)
@@ -96,7 +86,7 @@ const ContextProvider = ({ children }) => {
             })
 
             const currentId = activeChatIdRef.current
-            const allMessages = [...messages, userMessage, { role: 'ai', text: aiText }]
+            const allMessages = [...messages, { role: 'user', text }, { role: 'ai', text: aiText }]
 
             if (currentId) {
                 setChatHistory(prev =>
