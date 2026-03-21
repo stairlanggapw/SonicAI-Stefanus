@@ -10,11 +10,11 @@ app.use(express.json())
 app.use(cors())
 
 const client = new Groq({
-    apiKey: process.env.VITE_GROQ_KEY
+    apiKey: process.env.GROQ_API_KEY
 })
 
-const GOOGLE_API_KEY = process.env.VITE_GOOGLE_API_KEY
-const GOOGLE_CX = process.env.VITE_GOOGLE_CX
+const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY
+const GOOGLE_CX = process.env.GOOGLE_CX
 
 const searchGoogle = async (query) => {
     const res = await axios.get("https://www.googleapis.com/customsearch/v1", {
