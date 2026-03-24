@@ -10,8 +10,8 @@ const App = () => {
     <ContextProvider>
       <Routes>
         <Route path="/" element={
-            <div style={{display: 'flex', width: '100%'}}>
-                <div className="hidden md:block">
+            <div style={{display: 'flex', width: '100%', height: '100vh', overflow: 'hidden'}}>
+                <div className="hidden md:block" style={{flexShrink: 0}}>
                     <Sidebar />
                 </div>
                 <Main />

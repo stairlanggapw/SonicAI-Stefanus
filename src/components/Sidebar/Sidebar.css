@@ -1,12 +1,13 @@
 .sidebar {
     width: 70px;
-    min-height: 100vh;
+    height: 100vh;        
+    position: sticky;     
+    top: 0;               
     background-color: var(--sidebar-bg);
     padding: 20px 15px;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    gap: 20px;
+    justify-content: space-between;
     align-items: center;
     transition: width 0.4s ease, padding 0.4s ease;
     overflow: hidden;

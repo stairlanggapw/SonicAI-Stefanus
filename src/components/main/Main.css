@@ -70,7 +70,8 @@ body.dark .settings-popup {
 
 .main {
     flex: 1;
-    min-height: 100vh;
+    height: 100vh;        
+    overflow-y: auto;     
     padding-bottom: 0;  
     position: relative;
     background-color: var(--bg-main);
