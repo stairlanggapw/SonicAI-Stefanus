@@ -36,7 +36,7 @@ app.post("/chat", async (req, res) => {
     const userMessage = req.body.message
 
     const needsSearch = userMessage.match(
-        /hari ini|terbaru|sekarang|berita|harga|cuaca|siapa|kapan|berapa|cari|search|google/i
+        /hari ini|terbaru|sekarang|berita|harga|cuaca|kapan|berapa|cari|search|google/i
     )
 
     let systemPrompt = `You are Sonic, an AI assistant created by StefyNetics.
